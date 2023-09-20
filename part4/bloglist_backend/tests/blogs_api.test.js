@@ -3,13 +3,32 @@ const supertest = require("supertest");
 const app = require("../app");
 const api = supertest(app);
 const Blog = require("../models/blog");
+const User = require("../models/user");
 const helper = require("./test_helper");
 
+let headers;
+
 beforeEach(async () => {
+  await User.deleteMany({});
+
   await Blog.deleteMany({});
   const blogObjects = helper.initialBlogs.map((blog) => new Blog(blog));
   const promiseArray = blogObjects.map((blog) => blog.save());
   await Promise.all(promiseArray);
+
+  const newUser = {
+    username: "test",
+    name: "test",
+    password: "password",
+  };
+
+  await api.post("/api/users").send(newUser);
+
+  const result = await api.post("/api/login").send(newUser);
+
+  headers = {
+    Authorization: `Bearer ${result.body.token}`,
+  };
 });
 
 describe("when there are initially some blogs saved", () => {
@@ -58,6 +77,7 @@ describe("addition of a new blog", () => {
     await api
       .post("/api/blogs")
       .send(newBlog)
+      .set(headers)
       .expect(201)
       .expect("Content-Type", /application\/json/);
 
@@ -66,6 +86,21 @@ describe("addition of a new blog", () => {
 
     const titles = blogsAtEnd.map((n) => n.title);
     expect(titles).toContain("blooooog");
+  });
+
+  test("adding a blog fails with the proper status code 401 Unauthorized if a token is not provided", async () => {
+    const newBlog = {
+      title: "blooooog",
+      author: "auteur",
+      url: "url",
+      likes: 500,
+    };
+
+    await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .expect(401)
+      .expect("Content-Type", /application\/json/);
   });
 
   test("blog without likes property is defaulted to zero", async () => {
@@ -78,6 +113,7 @@ describe("addition of a new blog", () => {
     await api
       .post("/api/blogs")
       .send(newBlog)
+      .set(headers)
       .expect(201)
       .expect("Content-Type", /application\/json/);
 
@@ -94,7 +130,7 @@ describe("addition of a new blog", () => {
       likes: 10,
     };
 
-    await api.post("/api/blogs").send(newBlog).expect(400);
+    await api.post("/api/blogs").send(newBlog).set(headers).expect(400);
 
     const blogsAtEnd = await helper.blogsInDb();
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
@@ -103,13 +139,24 @@ describe("addition of a new blog", () => {
 
 describe("deletion of a blog", () => {
   test("succeeds with status code 204 if id is valid", async () => {
-    const blogsAtStart = await helper.blogsInDb();
-    const blogToDelete = blogsAtStart[0];
+    const newBlog = {
+      title: "doesnotmatter",
+      author: "doesnotmatter",
+      url: "doesnotmatter",
+      likes: 0,
+    };
 
-    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+    await api.post("/api/blogs").send(newBlog).set(headers).expect(201);
+
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToDelete = blogsAtStart.find(
+      (blog) => blog.title === newBlog.title
+    );
+
+    await api.delete(`/api/blogs/${blogToDelete.id}`).set(headers).expect(204);
 
     const blogsAtEnd = await helper.blogsInDb();
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1);
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
 
     const titles = blogsAtEnd.map((r) => r.title);
     expect(titles).not.toContain(blogToDelete.title);
