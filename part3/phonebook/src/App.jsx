@@ -21,7 +21,6 @@ const App = () => {
   const addPerson = (event) => {
     event.preventDefault();
     const foundPerson = persons.find((person) => person.name === newName);
-
     if (foundPerson) {
       if (
         window.confirm(
@@ -43,12 +42,7 @@ const App = () => {
             }, 5000);
           })
           .catch((error) => {
-            setPersons(
-              persons.filter((person) => person.id !== changedPerson.id)
-            );
-            setMessage(
-              `Error: Information of ${changedPerson.name} has already been removed from server`
-            );
+            setMessage(`Error: ${error.response.data.error}`);
             setTimeout(() => {
               setMessage(null);
             }, 5000);
@@ -59,13 +53,21 @@ const App = () => {
         name: newName,
         number: newNumber,
       };
-      personService.create(personToAdd).then((returnedPerson) => {
-        setPersons(persons.concat(returnedPerson));
-        setMessage(`Success: Added ${returnedPerson.name}`);
-        setTimeout(() => {
-          setMessage(null);
-        }, 5000);
-      });
+      personService
+        .create(personToAdd)
+        .then((returnedPerson) => {
+          setPersons(persons.concat(returnedPerson));
+          setMessage(`Success: Added ${returnedPerson.name}`);
+          setTimeout(() => {
+            setMessage(null);
+          }, 5000);
+        })
+        .catch((error) => {
+          setMessage(`Error: ${error.response.data.error}`);
+          setTimeout(() => {
+            setMessage(null);
+          }, 5000);
+        });
     }
     setNewName("");
     setNewNumber("");
