@@ -164,7 +164,7 @@ describe("deletion of a blog", () => {
 });
 
 describe("update of a blog", () => {
-  test("succeeds with status code 204 if id is valid", async () => {
+  test("succeeds with status code 200 if id is valid", async () => {
     const blogsAtStart = await helper.blogsInDb();
     const blogToUpdate = blogsAtStart[0];
 
