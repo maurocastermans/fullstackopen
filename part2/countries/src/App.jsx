@@ -29,10 +29,7 @@ function App() {
   return (
     <>
       <Filter value={filter} onChange={handleFilterChange} />
-      <Countries
-        countriesToShow={countriesToShow}
-        setCountries={setCountries}
-      />
+      <Countries countriesToShow={countriesToShow} setFilter={setFilter} />
     </>
   );
 }
