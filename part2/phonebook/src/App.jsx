@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
 import personService from "./services/persons";
+import Notification from "./components/Notification";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filter, setFilter] = useState("");
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     personService.getAll().then((initialPersons) => {
@@ -29,13 +30,28 @@ const App = () => {
       ) {
         const changedPerson = { ...foundPerson, number: newNumber };
         personService
-          .update(foundPerson.id, changedPerson)
+          .update(changedPerson.id, changedPerson)
           .then((returnedPerson) => {
             setPersons(
               persons.map((person) =>
-                person.id !== foundPerson.id ? person : returnedPerson
+                person.id !== changedPerson.id ? person : returnedPerson
               )
             );
+            setMessage(`Success: Updated ${returnedPerson.name}`);
+            setTimeout(() => {
+              setMessage(null);
+            }, 5000);
+          })
+          .catch((error) => {
+            setPersons(
+              persons.filter((person) => person.id !== changedPerson.id)
+            );
+            setMessage(
+              `Error: Information of ${changedPerson.name} has already been removed from server`
+            );
+            setTimeout(() => {
+              setMessage(null);
+            }, 5000);
           });
       }
     } else {
@@ -45,6 +61,10 @@ const App = () => {
       };
       personService.create(personToAdd).then((returnedPerson) => {
         setPersons(persons.concat(returnedPerson));
+        setMessage(`Success: Added ${returnedPerson.name}`);
+        setTimeout(() => {
+          setMessage(null);
+        }, 5000);
       });
     }
     setNewName("");
@@ -81,6 +101,7 @@ const App = () => {
   return (
     <>
       <h2>Phonebook</h2>
+      <Notification message={message} />
       <Filter value={filter} onChange={handleFilterChange} />
       <h2>Add a new</h2>
       <PersonForm
