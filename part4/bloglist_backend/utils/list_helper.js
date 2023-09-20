@@ -45,18 +45,18 @@ const mostLikes = (blogs) => {
     else authorsWithNumberOfLikes[blog.author] = blog.likes;
   });
 
-const topAuthor = Object.keys(authorsWithNumberOfLikes).reduce(
-  (topAuthor, author) =>
-    authorsWithNumberOfLikes[topAuthor] > authorsWithNumberOfLikes[author]
-      ? topAuthor
-      : author
-);
-return { author: topAuthor, likes: authorsWithNumberOfLikes[topAuthor] };
+  const topAuthor = Object.keys(authorsWithNumberOfLikes).reduce(
+    (topAuthor, author) =>
+      authorsWithNumberOfLikes[topAuthor] > authorsWithNumberOfLikes[author]
+        ? topAuthor
+        : author
+  );
+  return { author: topAuthor, likes: authorsWithNumberOfLikes[topAuthor] };
 };
 
 module.exports = {
-  totalLikes,
   favoriteBlog,
+  totalLikes,
   mostBlogs,
   mostLikes,
 };
