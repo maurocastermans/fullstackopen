@@ -23,7 +23,7 @@ const Notification = ({ message }) => {
   if (message.startsWith("Success"))
     return <div style={successfulStyle}> {message}</div>;
   else if (message.startsWith("Error"))
-    return <div style={errorStyle}> {message}</div>;
+    return <div className="error" style={errorStyle}> {message}</div>;
   else return null;
 };
 
